@@ -1,0 +1,14 @@
+[Unit]
+Description=Rocket.Chat server
+After=network.target nss-lookup.target mongod.target
+
+[Service]
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=rocketchat
+User=rocket
+Environment=MONGO_URL=mongodb://localhost:27017/rocketchat ROOT_URL=http://example.com:3000/ PORT=3000
+ExecStart=/usr/local/bin/node /opt/rocket/Rocket.Chat/main.js
+
+[Install]
+WantedBy=multi-user.target

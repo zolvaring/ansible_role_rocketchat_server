@@ -1,0 +1,109 @@
+---
+# file: .../ansible/roles/rocketchat_server/tasks/main.yaml
+
+
+- name: Install EPEL repository
+  package:
+    name: epel-release
+    state: installed
+  become: true
+
+
+- name: Install MongoDB repository via file
+  copy:
+    src: ../files/mongodb_repository
+    dest: /etc/yum.repos.d/mongodb-org-4.0.repo
+    owner: root
+    group: root
+  become: true
+
+
+- name: Install prerequisite packages
+  package:
+    name:
+      - curl
+      - GraphicsMagick
+      - gcc-c++
+      - nodejs
+      - npm
+      - mongodb-org
+  become: true
+
+
+- name: Install prerequisite Node.js packages
+  npm:
+    name:
+      - inherits
+      - n
+    state: installed
+    global: yes
+  become: true
+
+
+- name: Start and enable MongoDB service
+  service:
+    name: mongod
+    state: started
+    enabled: yes
+  become: true
+
+
+- name: Create a user for Rocket.Chat service
+  user:
+    name: rocket
+    home: /opt/rocket
+    groups: nginx
+  become: true
+
+
+- name: Create /opt/rocket directory
+  file:
+    state: directory
+    owner: rocket
+    group: rocket
+    mode: 0750
+  become: true
+
+
+- name: Download the latest Rocket.Chat archive
+  get_url:
+    url: https://releases.rocket.chat/latest/download
+    dest: /opt/rocket/rocket.chat.tgz
+  become: true
+
+
+- name: Extract the Rocket.Chat archive
+  unarchive:
+    src: /opt/rocket/rocket.chat.tgz
+    dest: /opt/rocket/Rocket.Chat
+  become: true
+
+
+- name: Install the Rocket.Chat Node.js unpackaged archive
+  command: npm install
+  args:
+    chdir: /opt/rocket/Rocket.Chat/programs/server
+  become: true
+
+
+- name: Create Rocket.Chat systemd service
+  copy:
+    src: ../files/rocketchat_service
+    dest: /etc/systemd/system/rocketchat.service
+    owner: root
+    group: root
+  become: true
+
+
+- name: Start and enable Rocket.Chat service
+  systemd:
+    name: rocketchat
+    state: started
+    enabled: yes
+    daemon_reload: yes
+  become: true
+
+
+###
+# TODO: finish https://linuxize.com/post/how-to-deploy-rocket-chat-on-centos-7/
+###
