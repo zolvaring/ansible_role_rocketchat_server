@@ -27,6 +27,7 @@
       - nodejs
       - npm
       - mongodb-org
+      - nginx
   become: true
 
 
@@ -101,6 +102,35 @@
     state: started
     enabled: yes
     daemon_reload: yes
+  become: true
+
+
+- name: Start and enable the NGINX service
+  service:
+    name: nginx
+    state: started
+    enabled: yes
+  become: true
+
+
+- name: Enable requisite firewalld services for web access
+  firewalld:
+    service: "{{ service }}"
+    state: enabled
+    permanent: true
+  become: true
+  notify: reload firewalld
+  loop:
+    - http
+    - https
+  loop_control:
+    loop_var: service
+
+
+- name: Deploy Rocket.Chat NGINX server block
+  template:
+    src: ../templates/rocket-chat.conf
+    dest: /etc/nginx/conf.d/rocket-chat.conf
   become: true
 
 

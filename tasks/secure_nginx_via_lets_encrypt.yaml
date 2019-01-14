@@ -1,0 +1,31 @@
+---
+# file: .../ansible/roles/rocketchat_server/tasks/secure_nginx_with_lets_encrypt.yaml
+
+
+- name: Install Certbot
+  package:
+    name: certbot
+    state: installed
+  become: true
+
+
+- name: Generate strong DH group
+  command: openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048
+  become: true
+
+
+- name: Create directories for Webroot Acme Challenge
+  file:
+    path: "{{ __file.path }}"
+    state: "{{ __file.state | default(omit) }}"
+    group: "{{ __file.group | default(omit) }}"
+  loop_control:
+    loop_var: __file
+  loop:
+    - path: /var/lib/letsencrypt
+      state: directory
+      mode: 1644
+    - path: /var/lib/letsencrypt/.well-known
+  become: true   
+    
+    
